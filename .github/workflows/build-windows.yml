@@ -7,7 +7,7 @@ jobs:
   windows-vst3:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Configure
         run: cmake -S . -B build -G "Visual Studio 18 2026" -A x64
       - name: Build

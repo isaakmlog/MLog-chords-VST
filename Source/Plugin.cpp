@@ -1,6 +1,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_audio_utils/juce_audio_utils.h>
 #include <juce_dsp/juce_dsp.h>
+#include <algorithm>
 #include <array>
 #include <cmath>
 
@@ -45,14 +46,13 @@ public:
         float level = state.getRawParameterValue("level")->load();
         const int n = buffer.getNumSamples();
         auto* L = buffer.getWritePointer(0); auto* R = buffer.getWritePointer(1);
-        juce::MidiBuffer::Iterator it(midi); juce::MidiMessage message; int eventPos = 0;
-        bool hasEvent = it.getNextEvent(message, eventPos);
+        auto it = midi.cbegin(); const auto end = midi.cend();
         for (int i=0;i<n;++i) {
-            while (hasEvent && eventPos <= i) {
+            for (; it != end && (*it).samplePosition <= i; ++it) {
+                const auto message = (*it).getMessage();
                 if (message.isNoteOn()) noteOn(message.getNoteNumber(), message.getFloatVelocity());
                 else if (message.isNoteOff()) noteOff(message.getNoteNumber());
                 else if (message.isAllNotesOff() || message.isAllSoundOff()) for(auto& v:voices) v.released=true;
-                hasEvent=it.getNextEvent(message,eventPos);
             }
             float left=0,right=0;
             for(auto& v:voices) {
